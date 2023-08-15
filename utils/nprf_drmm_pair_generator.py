@@ -172,9 +172,7 @@ class NPRFDRMMPairGenerator(PairGenerator):
       relevance = self.relevance_dict.get(qid)
       relevance_posting = relevance.get_judged_docid_list()
       res = relevance.get_supervised_docid_list()
-      if len(res) < self.nb_supervised_doc:
-        pass # because that d2d feature cannot be constructed
-      else:
+      if len(res) >= self.nb_supervised_doc:
         rel_0, rel_1, rel_2 = relevance_posting[0], relevance_posting[1], relevance_posting[2]
         rel_01_triplet_list = self.create_triplet_list(rel_0, rel_1, qid, sample_size)
         rel_12_triplet_list = self.create_triplet_list(rel_1, rel_2, qid, sample_size)
@@ -197,19 +195,14 @@ class NPRFDRMMPairGenerator(PairGenerator):
 
     def count_on_topic(neg_len, pos_len, sample_size):
       sample_size = min(neg_len, sample_size)
-      if sample_size == 0:
-        return 0
-      else:
-        return pos_len * sample_size
+      return 0 if sample_size == 0 else pos_len * sample_size
 
     total = 0
     for qid in qid_list:
       relevance = self.relevance_dict.get(qid)
       relevance_posting = relevance.get_judged_docid_list()
       res = relevance.get_supervised_docid_list()
-      if len(res) < self.nb_supervised_doc:
-        pass # because d2d feature cannnot be constructed
-      else:
+      if len(res) >= self.nb_supervised_doc:
         rel_0, rel_1, rel_2 = relevance_posting[0], relevance_posting[1], relevance_posting[2]
 
         count_01 = count_on_topic(len(rel_0), len(rel_1), sample_size)

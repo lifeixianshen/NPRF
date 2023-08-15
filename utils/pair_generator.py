@@ -171,10 +171,7 @@ class PairGenerator(object):
     '''
     def count_on_topic(neg_len, pos_len, sample_size):
       sample_size = min(neg_len, sample_size)
-      if sample_size == 0:
-        return 0
-      else:
-        return pos_len * sample_size
+      return 0 if sample_size == 0 else pos_len * sample_size
 
     total = 0
     for qid in qid_list:
@@ -202,10 +199,7 @@ class PairGenerator(object):
     '''
     def count_on_topic(neg_len, pos_len, sample_size):
       sample_size = min(neg_len, sample_size)
-      if sample_size == 0:
-        return 0
-      else:
-        return pos_len * sample_size
+      return 0 if sample_size == 0 else pos_len * sample_size
 
     total = 0
     for qid in qid_list:

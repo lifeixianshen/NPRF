@@ -30,10 +30,7 @@ def similarity_matrix(query, doc, embeddings, OOV_dict):
     q_mat[i, :] = unitvec(get_word_vec(word, embeddings, OOV_dict))
   for j, word in enumerate(doc):
     d_mat[:, j] = unitvec(get_word_vec(word, embeddings, OOV_dict))
-  similarity_matrix = np.dot(q_mat, d_mat)
-  #similarity_matrix = similarity_matrix.astype(np.float)
-
-  return similarity_matrix
+  return np.dot(q_mat, d_mat)
 
 
 def hist_from_matrix(text_maxlen, hist_size, sim_mat):
@@ -56,9 +53,7 @@ def hist_from_matrix(text_maxlen, hist_size, sim_mat):
     vid = int((v + 1.) / 2. * (hist_size - 1.))
     hist[i][vid] += 1
   hist += 1
-  hist = np.log10(hist)
-  # yield hist
-  return hist
+  return np.log10(hist)
 
 
 def kernel_from_matrix(sim_mat, mu_list, sigma_list, d2d=False):
@@ -100,17 +95,13 @@ def kernal_mus(n_kernels, use_exact):
   :param n_kernels: number of kernels (including exact match). first one is exact match
   :return: l_mu, a list of mu.
   """
-  if use_exact:
-    l_mu = [1]
-  else:
-    l_mu = [2]
+  l_mu = [1] if use_exact else [2]
   if n_kernels == 1:
     return l_mu
 
   bin_size = 2.0 / (n_kernels - 1)  # score range from [-1, 1]
   l_mu.append(1 - bin_size / 2)  # mu: middle of the bin
-  for i in xrange(1, n_kernels - 1):
-    l_mu.append(l_mu[i] - bin_size)
+  l_mu.extend(l_mu[i] - bin_size for i in xrange(1, n_kernels - 1))
   return l_mu
 
 

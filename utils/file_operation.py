@@ -19,17 +19,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s : %(levelname)s : %(
 def write_result_to_trec_format(result_dict, write_path, docnolist_file):
 
   docnolist = parse_corpus(docnolist_file)
-  f = open(write_path, 'w')
-  for qid, result in result_dict.items():
+  with open(write_path, 'w') as f:
+    for qid, result in result_dict.items():
 
-    docid_list = result.get_docid_list()
-    score_list = result.get_score_list()
-    rank = 0
-    for docid, score in zip(docid_list, score_list):
-      f.write("{0}\tQ0\t{1}\t{2}\t{3}\t{4}\n".format(qid, docnolist[docid], rank, score, result.get_runid()))
-      rank += 1
-
-  f.close()
+      docid_list = result.get_docid_list()
+      score_list = result.get_score_list()
+      for rank, (docid, score) in enumerate(zip(docid_list, score_list)):
+        f.write("{0}\tQ0\t{1}\t{2}\t{3}\t{4}\n".format(qid, docnolist[docid], rank, score, result.get_runid()))
 
 
 def read_result_from_file(result_file, docnolist_file):
@@ -73,7 +69,7 @@ def docno2docid(docno_file, increment=0):
   docid = increment
   with open(docno_file, 'r') as f:
     for line in f:
-      docno_map.update({line.strip(): docid})
+      docno_map[line.strip()] = docid
       docid += 1
 
   return docno_map
@@ -86,19 +82,15 @@ def parse_topic(topic_file):
       tokens = line.strip().split()
       qid = tokens[0].strip()
       q_terms = tokens[1:]
-      query_dict.update({int(qid): q_terms})
+      query_dict[int(qid)] = q_terms
 
   return query_dict
 
 def parse_stoplist(stop_file):
-  stoplist = []
   with open(stop_file, 'r') as f:
     _file = f.read()
   stop_soup = BeautifulSoup(_file, 'lxml')
-  for a in stop_soup.find_all('word'):
-    stoplist.append(a.text)
-
-  return stoplist
+  return [a.text for a in stop_soup.find_all('word')]
 
 def df_map_from_file(df_file):
   df_map = {}
@@ -109,7 +101,7 @@ def df_map_from_file(df_file):
       if df_map.has_key(term): # this is due to that two terms maybe the same after Krovetz stemming
         df_map[term] += df
       else:
-        df_map.update({term: df})
+        df_map[term] = df
 
   return df_map
 
@@ -121,10 +113,9 @@ def parse_content(content, stoplist=None):
   term_count_pair =  list(map(lambda x: x.split(':'), raw_content.split()))
   content_list = []
   for term, count in term_count_pair:
-    count = int(count)
-    if (stoplist != None and term in stoplist) or representsInt(term) or len(term) < 2:
-      pass
-    else:
+    if ((stoplist is None or term not in stoplist) and not representsInt(term)
+        and len(term) >= 2):
+      count = int(count)
       content_list.extend([term] * count)
   #assert int(doclen) == len(content_list)
   #string = ' '.join(content_list)
@@ -146,16 +137,14 @@ def parse_topk_content(content):
 def parse_corpus(corpus_file):
   corpus = []
   with open(corpus_file, 'r') as f:
-    for line in f:
-      corpus.append(line.strip())
-
+    corpus.extend(line.strip() for line in f)
   return corpus
 
 
 ########################### I/O operation #######################
 
 def retain_file(path, tagger, retain_file):
-  files = glob.glob(os.path.join(path, tagger + '*'))
+  files = glob.glob(os.path.join(path, f'{tagger}*'))
   for _file in files:
     if not _file.endswith(retain_file):
       os.remove(_file)

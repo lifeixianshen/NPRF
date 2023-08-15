@@ -56,12 +56,12 @@ class BasicModel(object):
     met = [[], [], [], [], [], []]
     iteration = -1
     for i in range(self.config.nb_epoch):
-      print ("Epoch " + str(i))
+      print(f"Epoch {str(i)}")
 
       nb_batch = nb_pair_train / self.config.batch_size
 
       train_generator = pair_generator.generate_pair_batch(train_qid_list, self.config.pair_sample_size)
-      for j in range(nb_batch / 100):
+      for _ in range(nb_batch / 100):
         iteration += 1
         history = model.fit_generator(generator=train_generator,
                                       steps_per_epoch=100,  # nb_pair_train / self.config.batch_size,
@@ -81,8 +81,10 @@ class BasicModel(object):
                   'runid': self.config.runid,
                   'output_file': output_file}
         if use_nprf:
-          kwargs.update({'nb_supervised_doc': self.config.nb_supervised_doc,
-                         'doc_topk_term': self.config.doc_topk_term,})
+          kwargs |= {
+              'nb_supervised_doc': self.config.nb_supervised_doc,
+              'doc_topk_term': self.config.doc_topk_term,
+          }
 
         valid_met = self.eval_by_qid_list(*valid_params, **kwargs)
         print("[Valid]\t\tMAP\tP20\tNDCG20")
@@ -102,7 +104,7 @@ class BasicModel(object):
       print("[Attention]\t\tCurrent best iteration {0}\n".format(met[0].index(max(met[0]))))
       if iteration > self.config.max_iteration:
         break
-      # model.save_weights(os.path.join(self.config.save_path, "fold{0}.epoch{1}.h5".format(fold, i)))
+        # model.save_weights(os.path.join(self.config.save_path, "fold{0}.epoch{1}.h5".format(fold, i)))
     best_iter, eval_met = self._extract_max_metric(met)
     retain_file(self.config.result_path, "fold{0}".format(fold), "fold{0}.iter{1}.res".format(fold, best_iter))
     # np.save('loss.npy', batch_losses)

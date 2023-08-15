@@ -36,9 +36,7 @@ def update_qrels_relevance(qrels_file, docno_map):
     qid, docno, relevance = tokens[0], tokens[2], tokens[3]
     docid = docno_map.get(docno)
 
-    if docid == None:
-      pass
-    else:
+    if docid != None:
       relevance, qid = int(relevance), int(qid)
       if relevance > 2 or relevance < 0:
         continue
@@ -47,9 +45,7 @@ def update_qrels_relevance(qrels_file, docno_map):
           qrels_relevance_dict.update({prev_qid: relevance_posting})
         prev_qid = qid
         relevance_posting = [[], [], []]
-        relevance_posting[relevance].append(docid)
-      else:
-        relevance_posting[relevance].append(docid)
+      relevance_posting[relevance].append(docid)
   qrels_relevance_dict.update({prev_qid: relevance_posting})
 
   return qrels_relevance_dict
@@ -78,18 +74,14 @@ def update_qrels_from_res_and_qrels(qrels_file, docno_map, res_dict):
     tokens = line.strip().split()
     qid, docno, relevance_score = tokens[0], tokens[2], tokens[3]
     docid = docno_map.get(docno)
-    if docid == None: # ignore those that are not in the result list
-      pass
-    else:
+    if docid != None:
       relevance_score, qid = int(relevance_score), int(qid)
       if qid != prev_qid:
         if len(relevance_map.values()) > 0:
           qrels_relevance_dict.update({prev_qid: relevance_map})
         prev_qid = qid
         relevance_map = OrderedDict()
-        relevance_map.update({docid: relevance_score})
-      else:
-        relevance_map.update({docid: relevance_score})
+      relevance_map.update({docid: relevance_score})
   qrels_relevance_dict.update({prev_qid: relevance_map})
 
   # update from result
@@ -100,14 +92,11 @@ def update_qrels_from_res_and_qrels(qrels_file, docno_map, res_dict):
     relevance_posting = [[], [], []]
     for docid in curr_supervised_docid_list[:1000]:
       relevance_score = curr_qrels_map.get(docid)
-      if relevance_score == None:
+      if (relevance_score is None
+          or relevance_score <= 2 and relevance_score < 0):
         relevance_score = 0
       elif relevance_score > 2:
         relevance_score = 2
-      elif relevance_score < 0:
-        relevance_score = 0
-      else:
-        pass
       relevance_posting[relevance_score].append(docid)
     if len(relevance_posting[1]) + len(relevance_posting[2]) < 5:
       logging.warn("topic {0}: relevant document less than 5".format(qid))
@@ -134,7 +123,7 @@ def update_res_relevance(res_file, docno_map):
     tokens = line.strip().split()
     qid, docno, rank, score = int(tokens[0]), tokens[2], int(tokens[3]), float(tokens[4])
     docid = docno_map.get(docno)
-    if docid == None:
+    if docid is None:
       logging.warn("Cannot get docid for docno {0}".format(docno))
     #if rank < k:
     #  docid = docno_map.get(docid)
@@ -143,11 +132,8 @@ def update_res_relevance(res_file, docno_map):
         res_relevance_dict.update({prev_qid: (docid_list, score_list)})
       prev_qid = qid
       docid_list, score_list = [], []
-      docid_list.append(docid)
-      score_list.append(score)
-    else:
-      docid_list.append(docid)
-      score_list.append(score)
+    docid_list.append(docid)
+    score_list.append(score)
   res_relevance_dict.update({prev_qid: (docid_list, score_list)})
 
   return res_relevance_dict

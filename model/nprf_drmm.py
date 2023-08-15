@@ -106,9 +106,7 @@ class NPRFDRMM(BasicModel):
     # adagrad
     model.compile(optimizer=self.config.optimizer, loss=rank_hinge_loss)
 
-    eval_met = self.train(model, pair_generator, fold, output_file, use_nprf=True)
-
-    return eval_met
+    return self.train(model, pair_generator, fold, output_file, use_nprf=True)
 
   def eval_by_qid_list_helper(self, qid_list, pair_generator):
 
@@ -156,9 +154,7 @@ class NPRFDRMM(BasicModel):
       res_dict.update({qid: res})
     # print "generate score {0}".format(time.time()-t)
     write_result_to_trec_format(res_dict, output_file, docnolist_file)
-    met = evaluate_trec(qrels_file, output_file)
-
-    return met
+    return evaluate_trec(qrels_file, output_file)
 
 
 if __name__ == '__main__':

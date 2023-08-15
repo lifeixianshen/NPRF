@@ -86,7 +86,6 @@ def sim_mat_and_kernel_per_query(relevance_dict, topic_dict,  corpus, topk_corpu
   waitlist = [docid for docid in cand if docid in supervised_docid_list[500:2000]]
   useful_docid_list = supervised_docid_list[: 1000]# [:500] + waitlist
   for docid in useful_docid_list:
-    sim_mat_list = []
     ker_list = []
     doc_content = parse_topk_content(corpus[docid]) # for pacrr
     # doc_content = parse_content(corpus[docid], stoplist)
@@ -98,10 +97,9 @@ def sim_mat_and_kernel_per_query(relevance_dict, topic_dict,  corpus, topk_corpu
       sim_file_name =  os.path.join(sim_output_dir, 'q{0}_d{1}.npy'.format(qid, docid))
     ker_file_name = os.path.join(ker_output_dir, 'q{0}_d{1}.npy'.format(qid, docid))
 
-    if os.path.exists(ker_file_name):
-      pass
-    else:
+    if not os.path.exists(ker_file_name):
       if d2d:
+        sim_mat_list = []
         for sup_docid in topk_supervised_docid_list:
           sup_doc_content = parse_topk_content(topk_corpus[sup_docid])[:30]
           sim_mat = similarity_matrix(sup_doc_content, doc_content, embeddings, OOV_dict)[:, :20000]
@@ -166,9 +164,7 @@ def hist_per_query(relevance_dict, text_max_len, hist_size, sim_path, hist_path,
       sim_file_name = os.path.join(sim_path, str(qid), 'q{0}_d{1}.npy'.format(qid, docid))
     hist_file_name = os.path.join(hist_output_dir, 'q{0}_d{1}.npy'.format(qid, docid))
 
-    if os.path.exists(hist_file_name):
-      pass
-    else:
+    if not os.path.exists(hist_file_name):
       if d2d:
         sim_list = load_pickle(sim_file_name)
         hist_array = np.zeros((len(sim_list), text_max_len, hist_size), dtype=np.float32)
@@ -237,10 +233,7 @@ def topk_term(df_file, corpus_file, output_file, nb_docs, topk):
 
       for term, count in term_count_pair:
         count = int(count)
-        if df_map.get(term) == None:
-        # if term in stop_list or df_map.get(term) == None:
-          pass
-        else:
+        if df_map.get(term) != None:
           df = df_map.get(term)
           idf = np.log((nb_docs - df + 0.5) / (df + 0.5))
           tfidf = count * idf
